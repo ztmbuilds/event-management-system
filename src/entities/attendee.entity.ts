@@ -31,16 +31,25 @@ export class Attendee extends AbstractEntity {
   @JoinColumn()
   user: User;
 
+  @Column()
+  userId: string;
+
   @Field(() => Event)
   @ManyToOne(() => Event, (event) => event.attendees, { nullable: false })
   @JoinColumn()
   event: Event;
+
+  @Column()
+  eventId: string;
 
   @Field(() => TicketType)
   @ManyToOne(() => TicketType, (ticket) => ticket.attendees, {
     nullable: false,
   })
   ticket: TicketType;
+
+  @Column()
+  ticketId: string;
 
   @Field(() => CheckinStatus)
   @Column({

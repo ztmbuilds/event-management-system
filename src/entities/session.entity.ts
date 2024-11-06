@@ -58,6 +58,9 @@ export class Session extends AbstractEntity {
   @ManyToOne(() => Event, (event) => event.sessions, { nullable: false })
   event: Event;
 
+  @Column()
+  eventId: string;
+
   @Field(() => [Speaker])
   @ManyToMany(() => Speaker, (speaker) => speaker.sessions)
   @JoinTable({

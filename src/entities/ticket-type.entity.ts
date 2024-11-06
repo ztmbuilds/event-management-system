@@ -47,6 +47,9 @@ export class TicketType extends AbstractEntity {
   @ManyToOne(() => Event, (event) => event.tickets, { nullable: false })
   event: Event;
 
+  @Column()
+  eventId: string;
+
   @Field(() => [Attendee])
   @OneToMany(() => Attendee, (attendee) => attendee.ticket)
   attendees: Attendee[];

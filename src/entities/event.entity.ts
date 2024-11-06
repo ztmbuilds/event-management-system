@@ -58,6 +58,9 @@ export class Event extends AbstractEntity {
   @ManyToOne(() => Venue, (venue) => venue.events, { nullable: false })
   venue: Venue;
 
+  @Column()
+  venueId: string;
+
   @Field(() => [Session])
   @OneToMany(() => Session, (session) => session.event, { nullable: false })
   sessions: Session[];
@@ -73,4 +76,7 @@ export class Event extends AbstractEntity {
   @Field(() => Organizer)
   @ManyToOne(() => Organizer, (organizer) => organizer.events)
   organizer: Organizer;
+
+  @Column()
+  organizerId: string;
 }

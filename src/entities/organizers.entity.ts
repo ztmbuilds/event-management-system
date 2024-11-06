@@ -1,11 +1,11 @@
 import { Column, Entity, OneToMany, OneToOne } from "typeorm";
-import { Field, ObjectType } from "type-graphql";
+import { Field, ObjectType, ID } from "type-graphql";
 import { AbstractEntity } from "./abstract.entity";
 import { Event } from "./event.entity";
 import { User } from "./user.entity";
 
-@ObjectType()
 @Entity("organizers")
+@ObjectType()
 export class Organizer extends AbstractEntity {
   @Field()
   @Column({ type: "varchar", length: 255 })
@@ -15,7 +15,9 @@ export class Organizer extends AbstractEntity {
   @Column({ type: "text", nullable: true })
   description: string;
 
-  @OneToOne(() => User, (user) => user.organizerProfile, { nullable: false })
+  @OneToOne(() => User, (user) => user.organizerProfile, {
+    nullable: false,
+  })
   user: User;
 
   @Field(() => [Event])

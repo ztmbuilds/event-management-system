@@ -1,4 +1,4 @@
-import { Field, ID } from "type-graphql";
+import { Field, ID, ObjectType } from "type-graphql";
 import {
   AfterUpdate,
   CreateDateColumn,
@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
+@ObjectType()
 export abstract class AbstractEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn("uuid")
