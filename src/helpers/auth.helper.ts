@@ -1,9 +1,8 @@
 import * as jwt from "jsonwebtoken";
-import { UserService } from "../services/user.service";
-import { GraphQLFieldResolver, GraphQLResolveInfo } from "graphql";
 import { MyContext } from "../utils/context";
-import { UnauthorizedError } from "../utils/error";
 import { AuthChecker } from "type-graphql";
+import userService from "../services/user.service";
+import { UnauthorizedError } from "../utils/error";
 
 interface TokenPayload extends jwt.JwtPayload {
   id: string;
@@ -11,8 +10,12 @@ interface TokenPayload extends jwt.JwtPayload {
 
 export async function getUserFromToken(token: string) {
   const decoded = jwt.verify(token, process.env.JWT_SECRET) as TokenPayload;
-  const user = await new UserService().getUser(decoded.id);
-  if (user) {
+  const user = await userService.getUserById(decoded.id, {
+    role: true,
+    id: true,
+  });
+
+  if (decoded.id) {
     return user;
   } else {
     return null;
@@ -37,9 +40,7 @@ export const customAuthChecker: AuthChecker<MyContext> = (
   { root, args, context, info },
   roles: string[]
 ) => {
-  if (!context.user) {
-    return false;
-  }
+  if (!context.role || !roles.includes(context.role)) return false;
 
   return true;
 };

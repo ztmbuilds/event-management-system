@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLFormattedError } from "graphql";
 import { NODE_ENV } from "../config";
 import { unwrapResolverError } from "@apollo/server/errors";
 import { ApolloServerErrorCode } from "@apollo/server/errors";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 abstract class BaseError extends Error {
   code: string;
@@ -31,11 +32,18 @@ export class UnauthorizedError extends BaseError {
   }
 }
 
+export class ForbiddenError extends BaseError {
+  constructor(message: string) {
+    super(message, "FORBIDDEN", 403);
+  }
+}
+
 export function formatError(
   formattedError: GraphQLFormattedError,
   error: unknown
 ): GraphQLFormattedError {
   if (NODE_ENV === "development") {
+    console.log(error);
     return formattedError;
   } else if (NODE_ENV === "production") {
     //known errors
@@ -52,6 +60,26 @@ export function formatError(
         },
       });
     }
+
+    if (originalError instanceof TokenExpiredError)
+      return new GraphQLError(originalError.message, {
+        extensions: {
+          code: "EXPIRED_JWT_TOKEN",
+          http: {
+            status: 401,
+          },
+        },
+      });
+
+    if (originalError instanceof JsonWebTokenError)
+      return new GraphQLError(originalError.message, {
+        extensions: {
+          code: "INVALID_JWT_TOKEN",
+          http: {
+            status: 401,
+          },
+        },
+      });
 
     //if it is a built in apollo error code, just return it
     if (isApolloErrorCode(formattedError.extensions.code)) {

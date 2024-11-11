@@ -9,7 +9,11 @@ import { config } from "dotenv";
 config();
 import "./database";
 import { PORT } from "./config";
-import { AuthResolver } from "./graphql/resolvers/auth.resolvers";
+import {
+  AuthResolver,
+  OrganizerResolver,
+  UserResolver,
+} from "./graphql/resolvers";
 import { buildSchema } from "type-graphql";
 import { formatError } from "./utils/error";
 import context, { MyContext } from "./utils/context";
@@ -19,7 +23,7 @@ async function start() {
   const app = express();
 
   const schema = await buildSchema({
-    resolvers: [AuthResolver],
+    resolvers: [AuthResolver, OrganizerResolver, UserResolver],
     authChecker: customAuthChecker,
   });
 

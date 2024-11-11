@@ -1,24 +1,24 @@
 import { Request } from "express";
 import { getUserFromToken } from "../helpers/auth.helper";
-import { User } from "../entities/user.entity";
 
 export default async ({ req }: { req: Request }) => {
-  let token = null;
-  let user = null;
+  if (req.headers.authorization) {
+    const token = req.headers["authorization"].split(" ")[1];
 
-  token = req.headers["authorization"].split(" ")[1];
+    if (token) {
+      const { id, role } = await getUserFromToken(token);
 
-  if (token) {
-    user = await getUserFromToken(token);
+      return {
+        id,
+        role,
+      };
+    }
+    return null;
   }
-
-  return {
-    user,
-    token,
-  };
+  return null;
 };
 
 export interface MyContext {
-  token: string;
-  user: User;
+  id: string;
+  role: string;
 }
