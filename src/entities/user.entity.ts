@@ -40,7 +40,10 @@ export class User extends AbstractEntity {
   @Column({ type: "enum", enum: Roles, default: Roles.ATTENDEE })
   role: string;
 
-  @OneToOne(() => Organizer, (organizer) => organizer.user)
+  @OneToOne(() => Organizer, (organizer) => organizer.user, {
+    cascade: ["soft-remove"],
+    onDelete: "SET NULL",
+  })
   @JoinColumn()
   organizerProfile: Organizer;
 

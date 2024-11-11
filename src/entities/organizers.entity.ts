@@ -17,6 +17,7 @@ export class Organizer extends AbstractEntity {
 
   @OneToOne(() => User, (user) => user.organizerProfile, {
     nullable: false,
+    onDelete: "CASCADE",
   })
   user: User;
 

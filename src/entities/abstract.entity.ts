@@ -2,6 +2,7 @@ import { Field, ID, ObjectType } from "type-graphql";
 import {
   AfterUpdate,
   CreateDateColumn,
+  DeleteDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -19,6 +20,10 @@ export abstract class AbstractEntity {
   @Field()
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
+
+  @Field()
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   @AfterUpdate()
   protected setUpdatedAt() {
