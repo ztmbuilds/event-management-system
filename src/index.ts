@@ -11,8 +11,10 @@ import "./database";
 import { PORT } from "./config";
 import {
   AuthResolver,
+  EventResolver,
   OrganizerResolver,
   UserResolver,
+  VenueResolver,
 } from "./graphql/resolvers";
 import { buildSchema } from "type-graphql";
 import { formatError } from "./utils/error";
@@ -23,8 +25,15 @@ async function start() {
   const app = express();
 
   const schema = await buildSchema({
-    resolvers: [AuthResolver, OrganizerResolver, UserResolver],
+    resolvers: [
+      AuthResolver,
+      OrganizerResolver,
+      UserResolver,
+      VenueResolver,
+      EventResolver,
+    ],
     authChecker: customAuthChecker,
+    validate: true,
   });
 
   const httpServer = http.createServer(app);

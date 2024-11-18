@@ -2,22 +2,28 @@ import * as jwt from "jsonwebtoken";
 import { MyContext } from "../utils/context";
 import { AuthChecker } from "type-graphql";
 import userService from "../services/user.service";
-import { UnauthorizedError } from "../utils/error";
 
 interface TokenPayload extends jwt.JwtPayload {
   id: string;
 }
 
 export async function getUserFromToken(token: string) {
-  const decoded = jwt.verify(token, process.env.JWT_SECRET) as TokenPayload;
-  const user = await userService.getUserById(decoded.id, {
-    role: true,
-    id: true,
-  });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as TokenPayload;
+    const user = await userService.getUser(
+      { id: decoded.id },
+      {
+        role: true,
+        id: true,
+      }
+    );
 
-  if (decoded.id) {
-    return user;
-  } else {
+    if (decoded.id) {
+      return user;
+    } else {
+      return null;
+    }
+  } catch (err) {
     return null;
   }
 }
