@@ -1,24 +1,31 @@
 import { Request } from "express";
 import { getUserFromToken } from "../helpers/auth.helper";
+import { createLoaders, Loaders } from "./dataloader";
 
 export default async ({ req }: { req: Request }) => {
+  let context: MyContext = {
+    loaders: createLoaders(),
+  };
   if (req.headers.authorization) {
     const token = req.headers["authorization"].split(" ")[1];
 
     if (token) {
-      const { id, role } = await getUserFromToken(token);
+      const user = await getUserFromToken(token);
 
-      return {
-        id,
-        role,
-      };
+      if (user) {
+        return {
+          id: user.id,
+          role: user.role,
+          ...context,
+        };
+      }
     }
-    return null;
   }
-  return null;
+  return context;
 };
 
 export interface MyContext {
-  id: string;
-  role: string;
+  id?: string;
+  role?: string;
+  loaders: Loaders;
 }

@@ -6,20 +6,24 @@ import {
   Ctx,
   FieldResolver,
   Authorized,
+  ResolverInterface,
+  Root,
 } from "type-graphql";
 import organizerService, {
   OrganizerService,
 } from "../../services/organizer.service";
 import { Organizer } from "../../entities/organizers.entity";
+import { Event } from "../../entities/event.entity";
 import {
   CreateOrganizerInput,
   GetAllOrganizers,
   UpdateOrganizerInput,
 } from "../typeDefs/organizer.types";
 import { MyContext } from "../../utils/context";
+import { User } from "../../entities/user.entity";
 
 @Resolver(() => Organizer)
-export class OrganizerResolver {
+export class OrganizerResolver implements ResolverInterface<Organizer> {
   organizerService: OrganizerService;
   constructor() {
     this.organizerService = organizerService;
@@ -30,14 +34,9 @@ export class OrganizerResolver {
     return await this.organizerService.getOrganizerDetails(id);
   }
 
-  @Query(() => GetAllOrganizers)
+  @Query(() => [Organizer])
   async organizers() {
-    const [organizers, count] = await this.organizerService.getAllOrganizers();
-
-    return {
-      organizers,
-      count,
-    };
+    return await this.organizerService.getAllOrganizers();
   }
 
   @Authorized(["ATTENDEE"])
@@ -57,5 +56,15 @@ export class OrganizerResolver {
     @Ctx() ctx: MyContext
   ) {
     return await this.organizerService.updateOrganizerDetails(id, ctx.id, data);
+  }
+
+  @FieldResolver(() => User)
+  async user(@Root() organizer: Organizer, @Ctx() ctx: MyContext) {
+    return ctx.loaders.userLoader.load(organizer.id);
+  }
+
+  @FieldResolver(() => [Event])
+  async events(@Root() organizer: Organizer, @Ctx() ctx: MyContext) {
+    return ctx.loaders.eventsLoader.load(organizer.id);
   }
 }

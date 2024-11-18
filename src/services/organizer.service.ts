@@ -1,6 +1,5 @@
 import { EntityManager, Repository, Not, IsNull } from "typeorm";
 import { Organizer } from "../entities/organizers.entity";
-import { AppDataSource } from "../database";
 import UserService from "./user.service";
 import { ConflictError, ForbiddenError, NotFoundError } from "../utils/error";
 import {
@@ -9,30 +8,37 @@ import {
 } from "../graphql/typeDefs/organizer.types";
 import { Roles } from "../entities/user.entity";
 import { User } from "../entities/user.entity";
+import organizerRepository, {
+  OrganizerRepository,
+} from "../repositories/organizer.repository";
+import { AppDataSource } from "../database";
 
 export class OrganizerService {
-  private organizerRepository: Repository<Organizer>;
+  private organizerRepository: OrganizerRepository;
   constructor() {
-    this.organizerRepository = AppDataSource.getRepository(Organizer);
+    this.organizerRepository = organizerRepository;
   }
 
   async createOrganizerProfile(data: CreateOrganizerInput, userId: string) {
     const { name, description } = data;
 
-    const user = await UserService.getUserById(userId, {
-      role: true,
-      id: true,
-    });
+    const user = await UserService.getUser(
+      { id: userId },
+      {
+        role: true,
+        id: true,
+      }
+    );
 
     if (user.role === Roles.ORGANIZER)
       throw new ConflictError("Organizer profile already exists for this user");
 
     return await AppDataSource.transaction(
       async (transactionalEntityManager) => {
-        const newOrganizer = this.organizerRepository.create({
-          description,
-          name,
-        });
+        const newOrganizer = new Organizer();
+
+        newOrganizer.description = description;
+        newOrganizer.name = name;
 
         const savedOrganizer = await transactionalEntityManager.save(
           Organizer,
@@ -50,8 +56,10 @@ export class OrganizerService {
   }
 
   async getOrganizerDetails(organizerId: string) {
-    const organizer = await this.organizerRepository.findOneBy({
-      id: organizerId,
+    const organizer = await this.organizerRepository.findOne({
+      where: {
+        id: organizerId,
+      },
     });
 
     if (!organizer) throw new NotFoundError("No organizer found");
@@ -64,12 +72,13 @@ export class OrganizerService {
     userId: string,
     data: UpdateOrganizerInput
   ) {
-    const organizer = await this.getOrganizerDetails(organizerId);
-
-    const user = await UserService.getUserById(userId, {
-      organizerProfileId: true,
-      role: true,
-    });
+    const user = await UserService.getUser(
+      { id: userId },
+      {
+        organizerProfileId: true,
+        role: true,
+      }
+    );
 
     if (
       user.role !== Roles.ORGANIZER ||
@@ -80,20 +89,31 @@ export class OrganizerService {
       );
     }
 
-    const updateData: Partial<UpdateOrganizerInput> = {};
+    // const updateData: Partial<UpdateOrganizerInput> = {};
 
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined)
-      updateData.description = data.description;
+    // if (data.name !== undefined) updateData.name = data.name;
+    // if (data.description !== undefined)
+    //   updateData.description = data.description;
 
-    organizer.name = updateData.name;
-    organizer.description = updateData.description;
+    // organizer.name = updateData.name;
+    // organizer.description = updateData.description;
 
-    return await this.organizerRepository.save(organizer);
+    // return await this.organizerRepository.save(organizer);
+
+    const updatedOrganizer = await this.organizerRepository.findOneAndUpdate(
+      {
+        id: organizerId,
+      },
+      data
+    );
+
+    if (!updatedOrganizer) throw new NotFoundError("No organizer found");
+
+    return updatedOrganizer;
   }
 
   async getAllOrganizers() {
-    return await this.organizerRepository.findAndCount();
+    return await this.organizerRepository.find();
   }
 
   async deleteProfile(
@@ -123,7 +143,9 @@ export class OrganizerService {
         id: organizationId,
         deletedAt: Not(IsNull()),
       },
-      withDeleted: true,
+      otherOptions: {
+        withDeleted: true,
+      },
     });
 
     if (!softDeletedOrganizerProfile)
