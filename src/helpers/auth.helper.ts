@@ -15,6 +15,7 @@ export async function getUserFromToken(token: string) {
       {
         role: true,
         id: true,
+        organizerProfileId: true,
       }
     );
 

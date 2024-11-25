@@ -16,16 +16,23 @@ export default async ({ req }: { req: Request }) => {
         return {
           id: user.id,
           role: user.role,
+          organizerId: user.organizerProfileId,
           ...context,
         };
       }
     }
   }
-  return context;
+  return {
+    ...context,
+    id: null,
+    role: null,
+    organizerId: null,
+  };
 };
 
 export interface MyContext {
-  id?: string;
-  role?: string;
+  id?: string | null;
+  role?: string | null;
+  organizerId?: string | null;
   loaders: Loaders;
 }

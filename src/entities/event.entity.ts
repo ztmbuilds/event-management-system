@@ -34,7 +34,7 @@ export class Event extends AbstractEntity {
   @Column({ type: "timestamptz" })
   startDate: Date;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: "timestamptz" })
   endDate: Date;
 
@@ -61,15 +61,15 @@ export class Event extends AbstractEntity {
   @Column()
   venueId: string;
 
-  @Field(() => [Session])
+  @Field(() => [Session], { nullable: true })
   @OneToMany(() => Session, (session) => session.event, { nullable: false })
   sessions: Session[];
 
-  @Field(() => [TicketType])
+  @Field(() => [TicketType], { nullable: true })
   @OneToMany(() => TicketType, (ticket) => ticket.event)
   tickets: TicketType[];
 
-  @Field(() => [Attendee])
+  @Field(() => [Attendee], { nullable: true })
   @OneToMany(() => Attendee, (attendee) => attendee.event)
   attendees: Attendee[];
 
