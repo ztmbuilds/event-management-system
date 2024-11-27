@@ -1,19 +1,33 @@
-import { FindOptionsSelect, IsNull, Not, Repository } from "typeorm";
+import {
+  FindOptionsRelations,
+  FindOptionsSelect,
+  FindOptionsWhere,
+} from "typeorm";
 import { Roles, User } from "../entities/user.entity";
-import { AppDataSource } from "../database";
+
 import { NotFoundError } from "../utils/error";
-import organizerService from "./organizer.service";
+
+import userRepository, {
+  UserRepository,
+} from "../repositories/user.repository";
+import { TransactionHandler } from "../utils/transaction";
+import { Organizer } from "../entities/organizers.entity";
 
 export class UserService {
-  private userRepository: Repository<User>;
+  private readonly userRepository: UserRepository;
   constructor() {
-    this.userRepository = AppDataSource.getRepository(User);
+    this.userRepository = userRepository;
   }
 
-  async getUserById(id: string, selectOptions?: FindOptionsSelect<User>) {
+  async getUser(
+    where: FindOptionsWhere<User>,
+    select?: FindOptionsSelect<User>,
+    relations?: FindOptionsRelations<User>
+  ) {
     const user = await this.userRepository.findOne({
-      where: { id },
-      select: selectOptions,
+      where,
+      select,
+      relations,
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -21,40 +35,56 @@ export class UserService {
     return user;
   }
 
+  async getUserWithOrganizerProfile(id: string) {
+    return await this.getUser({ id }, undefined, {
+      organizerProfile: true,
+    });
+  }
+
   async deleteOrganizerProfile(id: string) {
-    const user = await this.getUserById(id, {
-      id: true,
-      role: true,
-      organizerProfileId: true,
-    });
-    await AppDataSource.transaction(async (transactionalEntityManager) => {
-      await organizerService.deleteProfile(
-        user.organizerProfileId,
-        transactionalEntityManager
-      );
+    const transactionHandler = new TransactionHandler();
+    await transactionHandler.startTransaction("READ COMMITTED");
 
-      user.role = Roles.ATTENDEE;
+    transactionHandler.executeInTransaction(
+      async (transactionalEntityManager) => {
+        const user = await transactionalEntityManager.findOne(User, {
+          where: { id },
+          relations: ["organizerProfile"],
+        });
 
-      await transactionalEntityManager.save(user);
-    });
+        if (!user) throw new NotFoundError("No user found");
+        await transactionalEntityManager.softRemove(user.organizerProfile);
 
-    return user;
+        user.role = Roles.ATTENDEE;
+
+        return await transactionalEntityManager.save(user);
+      }
+    );
   }
 
   async restoreOrganizerProfile(id: string) {
-    const user = await this.getUserById(id);
+    const transactionHandler = new TransactionHandler();
+    await transactionHandler.startTransaction("READ COMMITTED");
 
-    await AppDataSource.transaction(async (transactionalEntityManager) => {
-      await organizerService.restoreProfile(
-        user.organizerProfileId,
-        transactionalEntityManager
-      );
+    await transactionHandler.executeInTransaction(
+      async (transactionalEntityManager) => {
+        const user = await transactionalEntityManager.findOne(User, {
+          where: { id },
+          relations: ["organizerProfile"],
+        });
 
-      user.role = Roles.ORGANIZER;
+        if (!user) throw new NotFoundError("No user found");
 
-      await transactionalEntityManager.save(user);
-    });
-    return user;
+        await transactionalEntityManager.restore(
+          Organizer,
+          user.organizerProfileId
+        );
+
+        user.role = Roles.ORGANIZER;
+
+        return await transactionalEntityManager.save(user);
+      }
+    );
   }
 }
 export default new UserService();
