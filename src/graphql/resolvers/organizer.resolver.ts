@@ -16,7 +16,6 @@ import { Organizer } from "../../entities/organizers.entity";
 import { Event } from "../../entities/event.entity";
 import {
   CreateOrganizerInput,
-  GetAllOrganizers,
   UpdateOrganizerInput,
 } from "../typeDefs/organizer.types";
 import { MyContext } from "../../utils/context";
@@ -60,11 +59,14 @@ export class OrganizerResolver implements ResolverInterface<Organizer> {
 
   @FieldResolver(() => User)
   async user(@Root() organizer: Organizer, @Ctx() ctx: MyContext) {
+    if (ctx.role !== "ADMIN") {
+      return null;
+    }
     return ctx.loaders.userLoader.load(organizer.id);
   }
 
   @FieldResolver(() => [Event])
   async events(@Root() organizer: Organizer, @Ctx() ctx: MyContext) {
-    return ctx.loaders.eventsLoader.load(organizer.id);
+    return ctx.loaders.eventsByOrganizerIdLoader.load(organizer.id);
   }
 }

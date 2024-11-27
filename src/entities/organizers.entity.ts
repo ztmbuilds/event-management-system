@@ -15,6 +15,7 @@ export class Organizer extends AbstractEntity {
   @Column({ type: "text", nullable: true })
   description: string;
 
+  @Field(() => User, { nullable: true })
   @OneToOne(() => User, (user) => user.organizerProfile, {
     nullable: false,
     onDelete: "CASCADE",

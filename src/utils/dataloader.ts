@@ -15,147 +15,156 @@ import { Organizer } from "../entities/organizers.entity";
 import attendeeRepository from "../repositories/attendee.repository";
 import organizerRepository from "../repositories/organizer.repository";
 
-export const createLoaders = () => ({
-  userLoader: new DataLoader<string, User>(async (organizerIds) => {
-    const users = await userRepository.find({
-      where: {
-        organizerProfileId: In(organizerIds),
-      },
-    });
-
-    const userMap = new Map(
-      users.map((user) => [user.organizerProfileId, user])
-    );
-
-    return organizerIds.map((id) => userMap.get(id) || null);
-  }),
-
-  eventsLoader: new DataLoader<string, Event[]>(async (organizerIds) => {
+const createEventsLoader = (field: keyof Event) => {
+  return new DataLoader<string, Event[]>(async (ids) => {
     const events = await eventRepository.find({
       where: {
-        organizerId: In(organizerIds),
+        [field]: In(ids),
       },
     });
 
-    //group events by their organizerId using Map
+    //group events
 
     const eventMap = new Map<string, Event[]>();
-    organizerIds.forEach((id) => eventMap.set(id, []));
+    ids.forEach((id) => eventMap.set(id, []));
 
     events.forEach((event) => {
-      const organizerEvents = eventMap.get(event.organizerId) || [];
-      organizerEvents.push(event);
-      eventMap.set(event.organizerId, organizerEvents);
+      const key = event[field] as string;
+      const events = eventMap.get(key) || [];
+      events.push(event);
+      eventMap.set(key, events);
     });
 
-    return organizerIds.map((id) => eventMap.get(id) || []);
-  }),
+    return ids.map((id) => eventMap.get(id) || []);
+  });
+};
 
-  eventLoader: new DataLoader<string, Event>(async (eventIds) => {
-    const events = await eventRepository.find({
-      where: {
-        id: In(eventIds),
-      },
-    });
-    const eventMap = new Map<string, Event>(
-      events.map((event) => [event.id, event])
-    );
+export const createLoaders = () => {
+  return {
+    userLoader: new DataLoader<string, User>(async (organizerIds) => {
+      const users = await userRepository.find({
+        where: {
+          organizerProfileId: In(organizerIds),
+        },
+      });
 
-    return eventIds.map((id) => eventMap.get(id) || null);
-  }),
+      const userMap = new Map(
+        users.map((user) => [user.organizerProfileId, user])
+      );
 
-  venueLoader: new DataLoader<string, Venue>(async (venueIds) => {
-    const venues = await venueRepository.find({
-      where: {
-        id: In(venueIds),
-      },
-    });
+      return organizerIds.map((id) => userMap.get(id) || null);
+    }),
 
-    const venueMap = new Map<string, Venue>(
-      venues.map((venue) => [venue.id, venue])
-    );
+    eventsByOrganizerIdLoader: createEventsLoader("organizerId"),
 
-    return venueIds.map((id) => venueMap.get(id));
-  }),
+    eventsByVenueIdLoader: createEventsLoader("venueId"),
 
-  sessionLoader: new DataLoader<string, Session[]>(async (eventIds) => {
-    const sessions = await sessionRepository.find({
-      where: {
-        eventId: In(eventIds),
-      },
-    });
+    eventLoader: new DataLoader<string, Event>(async (eventIds) => {
+      const events = await eventRepository.find({
+        where: {
+          id: In(eventIds),
+        },
+      });
+      const eventMap = new Map<string, Event>(
+        events.map((event) => [event.id, event])
+      );
 
-    const sessionMap = new Map<string, Session[]>();
+      return eventIds.map((id) => eventMap.get(id) || null);
+    }),
 
-    eventIds.forEach((id) => sessionMap.set(id, []));
+    venueLoader: new DataLoader<string, Venue>(async (venueIds) => {
+      const venues = await venueRepository.find({
+        where: {
+          id: In(venueIds),
+        },
+      });
 
-    sessions.forEach((session) => {
-      const eventSessions = sessionMap.get(session.id) || [];
+      const venueMap = new Map<string, Venue>(
+        venues.map((venue) => [venue.id, venue])
+      );
 
-      eventSessions.push(session);
+      return venueIds.map((id) => venueMap.get(id));
+    }),
 
-      sessionMap.set(session.eventId, eventSessions);
-    });
+    sessionLoader: new DataLoader<string, Session[]>(async (eventIds) => {
+      const sessions = await sessionRepository.find({
+        where: {
+          eventId: In(eventIds),
+        },
+      });
 
-    return eventIds.map((id) => sessionMap.get(id) || []);
-  }),
+      const sessionMap = new Map<string, Session[]>();
 
-  ticketLoader: new DataLoader<string, TicketType[]>(async (eventIds) => {
-    const ticketTypes = await ticketTypeRepository.find({
-      where: {
-        eventId: In(eventIds),
-      },
-    });
+      eventIds.forEach((id) => sessionMap.set(id, []));
 
-    const ticketTypeMap = new Map<string, TicketType[]>();
+      sessions.forEach((session) => {
+        const eventSessions = sessionMap.get(session.id) || [];
 
-    eventIds.forEach((id) => ticketTypeMap.set(id, []));
+        eventSessions.push(session);
 
-    ticketTypes.forEach((ticketType) => {
-      const eventTicketTypes = ticketTypeMap.get(ticketType.eventId) || [];
+        sessionMap.set(session.eventId, eventSessions);
+      });
 
-      eventTicketTypes.push(ticketType);
+      return eventIds.map((id) => sessionMap.get(id) || []);
+    }),
 
-      ticketTypeMap.set(ticketType.eventId, eventTicketTypes);
-    });
+    ticketLoader: new DataLoader<string, TicketType[]>(async (eventIds) => {
+      const ticketTypes = await ticketTypeRepository.find({
+        where: {
+          eventId: In(eventIds),
+        },
+      });
 
-    return eventIds.map((eventId) => ticketTypeMap.get(eventId) || []);
-  }),
+      const ticketTypeMap = new Map<string, TicketType[]>();
 
-  attendeeLoader: new DataLoader<string, Attendee[]>(async (eventIds) => {
-    const attendees = await attendeeRepository.find({
-      where: {
-        eventId: In(eventIds),
-      },
-    });
+      eventIds.forEach((id) => ticketTypeMap.set(id, []));
 
-    const attendeeMap = new Map<string, Attendee[]>();
+      ticketTypes.forEach((ticketType) => {
+        const eventTicketTypes = ticketTypeMap.get(ticketType.eventId) || [];
 
-    eventIds.forEach((id) => attendeeMap.set(id, []));
+        eventTicketTypes.push(ticketType);
 
-    attendees.forEach((attendee) => {
-      const eventAttendees = attendeeMap.get(attendee.eventId) || [];
-      eventAttendees.push(attendee);
+        ticketTypeMap.set(ticketType.eventId, eventTicketTypes);
+      });
 
-      attendeeMap.set(attendee.eventId, eventAttendees);
-    });
+      return eventIds.map((eventId) => ticketTypeMap.get(eventId) || []);
+    }),
 
-    return eventIds.map((id) => attendeeMap.get(id) || []);
-  }),
+    attendeeLoader: new DataLoader<string, Attendee[]>(async (eventIds) => {
+      const attendees = await attendeeRepository.find({
+        where: {
+          eventId: In(eventIds),
+        },
+      });
 
-  organizerLoader: new DataLoader<string, Organizer>(async (organizerIds) => {
-    const organizers = await organizerRepository.find({
-      where: {
-        id: In(organizerIds),
-      },
-    });
+      const attendeeMap = new Map<string, Attendee[]>();
 
-    const organizerMap = new Map<string, Organizer>(
-      organizers.map((organizer) => [organizer.id, organizer])
-    );
+      eventIds.forEach((id) => attendeeMap.set(id, []));
 
-    return organizerIds.map((id) => organizerMap.get(id) || null);
-  }),
-});
+      attendees.forEach((attendee) => {
+        const eventAttendees = attendeeMap.get(attendee.eventId) || [];
+        eventAttendees.push(attendee);
+
+        attendeeMap.set(attendee.eventId, eventAttendees);
+      });
+
+      return eventIds.map((id) => attendeeMap.get(id) || []);
+    }),
+
+    organizerLoader: new DataLoader<string, Organizer>(async (organizerIds) => {
+      const organizers = await organizerRepository.find({
+        where: {
+          id: In(organizerIds),
+        },
+      });
+
+      const organizerMap = new Map<string, Organizer>(
+        organizers.map((organizer) => [organizer.id, organizer])
+      );
+
+      return organizerIds.map((id) => organizerMap.get(id) || null);
+    }),
+  };
+};
 
 export type Loaders = ReturnType<typeof createLoaders>;

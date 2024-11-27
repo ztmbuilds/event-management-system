@@ -98,4 +98,12 @@ export class AbstractRepository<T> {
       },
     };
   }
+
+  async findOneAndDelete(where: FindOptionsWhere<T>) {
+    const res = await AppDataSource.getRepository(this.entityTarget).delete(
+      where
+    );
+
+    return { status: !!res.affected };
+  }
 }

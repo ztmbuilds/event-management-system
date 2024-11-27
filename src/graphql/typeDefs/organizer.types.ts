@@ -18,10 +18,10 @@ export class CreateOrganizerInput {
 export class UpdateOrganizerInput {
   @MaxLength(255)
   @Field({ nullable: true })
-  name: string;
+  name?: string;
 
   @Field({ nullable: true })
-  description: string;
+  description?: string;
 }
 
 @ObjectType()
