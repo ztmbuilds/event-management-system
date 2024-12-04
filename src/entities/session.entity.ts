@@ -36,6 +36,10 @@ export class Session extends AbstractEntity {
 
   @Field()
   @Column({ type: "timestamptz" })
+  date: Date;
+
+  @Field()
+  @Column({ type: "timestamptz" })
   startTime: Date;
 
   @Field()
@@ -64,7 +68,7 @@ export class Session extends AbstractEntity {
   @Field(() => [Speaker])
   @ManyToMany(() => Speaker, (speaker) => speaker.sessions)
   @JoinTable({
-    name: "session_speakers",
+    name: "sessions_speakers",
     joinColumn: { name: "session_id", referencedColumnName: "id" },
     inverseJoinColumn: { name: "speaker_id", referencedColumnName: "id" },
   })

@@ -20,6 +20,12 @@ export class NotFoundError extends BaseError {
   }
 }
 
+export class BadRequestError extends BaseError {
+  constructor(message: string) {
+    super(message, "BAD_REQUEST", 400);
+  }
+}
+
 export class ConflictError extends BaseError {
   constructor(message: string) {
     super(message, "CONFLICT", 409);

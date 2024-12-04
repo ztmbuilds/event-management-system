@@ -16,7 +16,7 @@ export default async ({ req }: { req: Request }) => {
         return {
           id: user.id,
           role: user.role,
-          organizerId: user.organizerProfileId,
+          organizerId: user.organizerProfileId ? user.organizerProfileId : null,
           ...context,
         };
       }

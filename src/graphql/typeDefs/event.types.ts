@@ -22,6 +22,7 @@ import {
 } from "../../utils/customValidator";
 import { FilterArgs } from "./index.types";
 import { Event } from "../../entities/event.entity";
+import { Pagination } from "./index.types";
 
 @InputType()
 export class CreateEventInput {
@@ -119,16 +120,6 @@ export class EventFilterArgs extends FilterArgs<EventOrderBy> {
 
   @Field(() => EventOrderBy, { nullable: true })
   orderBy?: EventOrderBy;
-}
-
-@ObjectType()
-class Pagination {
-  @Field()
-  total: number;
-  @Field()
-  size: number;
-  @Field()
-  page: number;
 }
 
 @ObjectType()

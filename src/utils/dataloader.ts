@@ -14,6 +14,8 @@ import { Attendee } from "../entities/attendee.entity";
 import { Organizer } from "../entities/organizers.entity";
 import attendeeRepository from "../repositories/attendee.repository";
 import organizerRepository from "../repositories/organizer.repository";
+import { Speaker } from "../entities/speaker.entity";
+import speakerRepository from "../repositories/speaker.repository";
 
 const createEventsLoader = (field: keyof Event) => {
   return new DataLoader<string, Event[]>(async (ids) => {
@@ -107,6 +109,61 @@ export const createLoaders = () => {
 
       return eventIds.map((id) => sessionMap.get(id) || []);
     }),
+
+    speakerLoader: new DataLoader<string, Speaker[]>(async (sessionIds) => {
+      const speakers = await speakerRepository.find({
+        relations: {
+          sessions: true,
+        },
+        where: {
+          sessions: {
+            id: In(sessionIds),
+          },
+        },
+      });
+
+      const speakerMap = new Map<string, Speaker[]>();
+
+      sessionIds.forEach((id) => speakerMap.set(id, []));
+
+      speakers.forEach((speaker) => {
+        speaker.sessions.forEach((session) => {
+          const sessionSpeakers = speakerMap.get(session.id) || [];
+          sessionSpeakers.push(speaker);
+          speakerMap.set(session.id, sessionSpeakers);
+        });
+      });
+
+      return sessionIds.map((id) => speakerMap.get(id) || []);
+    }),
+
+    sessionAttendeesLoader: new DataLoader<string, Attendee[]>(
+      async (sessionIds) => {
+        const attendees = await attendeeRepository.find({
+          relations: {
+            sessions: true,
+          },
+          where: {
+            sessions: {
+              id: In(sessionIds),
+            },
+          },
+        });
+
+        const sessionAttendeesMap = new Map<string, Attendee[]>();
+        sessionIds.forEach((id) => sessionAttendeesMap.set(id, []));
+
+        attendees.forEach((attendee) => {
+          attendee.sessions.forEach((session) => {
+            const sessionAttendees = sessionAttendeesMap.get(session.id);
+            sessionAttendees.push(attendee);
+            sessionAttendeesMap.set(session.id, sessionAttendees);
+          });
+        });
+
+        return sessionIds.map((id) => sessionAttendeesMap.get(id) || []);
+      }
+    ),
 
     ticketLoader: new DataLoader<string, TicketType[]>(async (eventIds) => {
       const ticketTypes = await ticketTypeRepository.find({
