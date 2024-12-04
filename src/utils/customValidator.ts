@@ -21,9 +21,11 @@ export class StartDateValidator implements ValidatorConstraintInterface {
 
 @ValidatorConstraint({ async: false })
 export class EndDateValidator implements ValidatorConstraintInterface {
-  validate(endDate: Date, args: ValidationArguments) {
-    const { startDate } = args.object as CreateEventInput;
+  validate(endDate: Date | string, args: ValidationArguments) {
+    let { startDate } = args.object as CreateEventInput;
+    startDate = new Date(startDate);
     const currentTime = new Date();
+    endDate = new Date(endDate);
 
     return endDate > currentTime && endDate > startDate;
   }

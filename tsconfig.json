@@ -6,7 +6,7 @@
     "emitDecoratorMetadata": true /* Emit design-type metadata for decorated declarations in source files. */,
 
     "module": "commonjs" /* Specify what module code is generated. */,
-    "rootDir": "./src" /* Specify the root folder within your source files. */,
+    "rootDir": "." /* Specify the root folder within your source files. */,
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,
     "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
 
@@ -21,5 +21,6 @@
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
-  }
+  },
+  "exclude": ["dist", "tests", "jest.config.ts"]
 }
