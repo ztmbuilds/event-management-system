@@ -4,3 +4,4 @@ export { UserResolver } from "./user.resolver";
 export { EventResolver } from "./event.resolver";
 export { VenueResolver } from "./venue.resolver";
 export { SessionResolver } from "./session.resolver";
+export { SpeakerResolver } from "./speaker.resolver";

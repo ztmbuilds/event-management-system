@@ -65,6 +65,22 @@ export class SessionResolver {
     );
   }
 
+  @Mutation(() => Session)
+  async addSpeaker(
+    @Arg("sessionId") sessionId: string,
+    @Arg("speakerId") speakerId: string
+  ) {
+    return await this.sessionService.addSpeaker(sessionId, speakerId);
+  }
+
+  @Mutation(() => Session)
+  async removeSpeaker(
+    @Arg("sessionId") sessionId: string,
+    @Arg("speakerId") speakerId: string
+  ) {
+    return await this.sessionService.removeSpeaker(sessionId, speakerId);
+  }
+
   @FieldResolver(() => Event)
   async event(@Root() session: Session, @Ctx() ctx: MyContext) {
     return await ctx.loaders.eventLoader.load(session.eventId);

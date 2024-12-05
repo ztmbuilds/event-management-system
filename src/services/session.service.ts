@@ -9,12 +9,14 @@ import {
 import eventService from "./event.service";
 import {
   BadRequestError,
+  ConflictError,
   NotFoundError,
   UnauthorizedError,
 } from "../utils/error";
 import { periodIsWithinPeriod } from "../utils/validate-period";
-import { Session } from "../entities/session.entity";
+import { Session, SessionStatus } from "../entities/session.entity";
 import { MyContext } from "../utils/context";
+import speakerService from "./speaker.service";
 
 export class SessionService {
   private readonly sessionRepository: SessionRepository;
@@ -107,6 +109,52 @@ export class SessionService {
     });
 
     return session ? session : null;
+  }
+
+  async addSpeaker(sessionId: string, speakerId: string) {
+    const session = await this.sessionRepository.findOne({
+      where: {
+        id: sessionId,
+      },
+      relations: {
+        speakers: true,
+      },
+    });
+    if (!session) throw new NotFoundError("Session not found");
+    const speaker = await speakerService.getSpeaker(speakerId);
+
+    if (!speaker) throw new NotFoundError("Speaker not found");
+
+    session.speakers.push(speaker);
+
+    return await this.sessionRepository.save(session);
+  }
+
+  async removeSpeaker(sessionId: string, speakerId: string) {
+    const session = await this.sessionRepository.findOne({
+      where: {
+        id: sessionId,
+      },
+      relations: {
+        speakers: true,
+      },
+    });
+    if (!session) throw new NotFoundError("Session not found");
+
+    if (session.status === SessionStatus.COMPLETED)
+      throw new ConflictError(
+        "You cannot remove a speaker from a session that has been completed"
+      );
+
+    const speaker = await speakerService.getSpeaker(speakerId);
+
+    if (!speaker) throw new NotFoundError("Speaker not found");
+
+    session.speakers = session.speakers.filter(
+      (speaker) => speaker.id !== speakerId
+    );
+
+    return await this.sessionRepository.save(session);
   }
 }
 

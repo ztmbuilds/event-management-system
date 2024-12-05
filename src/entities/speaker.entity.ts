@@ -4,7 +4,7 @@ import { AbstractEntity } from "./abstract.entity";
 import { Session } from "./session.entity";
 
 @ObjectType()
-class SocialLink {
+export class SocialLink {
   @Field()
   platform: string;
 
@@ -23,12 +23,12 @@ export class Speaker extends AbstractEntity {
   @Column({ type: "text", nullable: true })
   bio: string;
 
-  @Field({ nullable: true })
-  @Column({ type: "varchar", length: 255, nullable: true })
-  profileImage: string;
+  // @Field({ nullable: true })
+  // @Column({ type: "varchar", length: 255, nullable: true })
+  // profileImage: string;
 
   @Field(() => [String], { nullable: true })
-  @Column({ type: "varchar", array: true, nullable: true })
+  @Column({ type: "varchar", array: true, nullable: true, default: [] })
   expertise: string[];
 
   @Field(() => [SocialLink], { nullable: true })

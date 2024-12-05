@@ -9,6 +9,7 @@ import {
 import { AppDataSource } from "../database";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { PaginatedArgs } from "../types";
+import { AbstractEntity } from "../entities/abstract.entity";
 
 interface FindOneParams<T> {
   where: FindOptionsWhere<T>;
@@ -21,7 +22,7 @@ interface FindParams<T> extends Omit<FindOneParams<T>, "where"> {
   where?: FindOptionsWhere<T>;
 }
 
-export class AbstractRepository<T> {
+export class AbstractRepository<T extends AbstractEntity> {
   constructor(private entityTarget: EntityTarget<T>) {}
 
   async save(entity: T) {
@@ -105,5 +106,14 @@ export class AbstractRepository<T> {
     );
 
     return { status: !!res.affected };
+  }
+
+  async findOneAndSoftDelete(where: FindOptionsWhere<T>): Promise<T | null> {
+    const entity = await this.findOne({ where });
+    if (!entity) return null;
+
+    entity.deletedAt = new Date();
+
+    return await this.save(entity);
   }
 }
