@@ -37,7 +37,7 @@ export class EventResolver {
     return await this.eventService.getAllEvents(filter);
   }
 
-  @Query(() => Event || null)
+  @Query(() => Event, { nullable: true })
   async event(@Arg("id") id: string) {
     return this.eventService.getEvent(id);
   }
@@ -87,7 +87,7 @@ export class EventResolver {
     return await ctx.loaders.ticketLoader.load(event.id);
   }
 
-  @FieldResolver(() => [Attendee])
+  @FieldResolver(() => [Attendee], { nullable: true })
   async attendees(@Root() event: Event, @Ctx() ctx: MyContext) {
     return await this.eventService.getEventAttendees(event.id, ctx);
   }

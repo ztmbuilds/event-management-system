@@ -36,7 +36,7 @@ export class SessionResolver {
     return await this.sessionService.getAllSessionsForEvent(filter, eventId);
   }
 
-  @Query(() => Session)
+  @Query(() => Session, { nullable: true })
   async session(@Arg("sessionId") sessionId: string) {
     return await this.sessionService.getSession(sessionId);
   }

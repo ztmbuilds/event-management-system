@@ -28,7 +28,7 @@ export class OrganizerResolver implements ResolverInterface<Organizer> {
     this.organizerService = organizerService;
   }
 
-  @Query(() => Organizer)
+  @Query(() => Organizer, { nullable: true })
   async organizer(@Arg("id") id: string) {
     return await this.organizerService.getOrganizerDetails(id);
   }
@@ -57,7 +57,7 @@ export class OrganizerResolver implements ResolverInterface<Organizer> {
     return await this.organizerService.updateOrganizerDetails(id, ctx.id, data);
   }
 
-  @FieldResolver(() => User)
+  @FieldResolver(() => User, { nullable: true })
   async user(@Root() organizer: Organizer, @Ctx() ctx: MyContext) {
     if (ctx.role !== "ADMIN") {
       return null;

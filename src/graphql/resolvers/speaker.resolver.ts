@@ -14,7 +14,7 @@ export class SpeakerResolver {
     this.speakerService = speakerService;
   }
 
-  @Query(() => Speaker)
+  @Query(() => Speaker, { nullable: true })
   async speaker(@Arg("id") id: string) {
     return await this.speakerService.getSpeaker(id);
   }

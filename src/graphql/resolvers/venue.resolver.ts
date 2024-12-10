@@ -23,7 +23,7 @@ export class VenueResolver {
     this.venueService = venueService;
   }
 
-  @Query(() => Venue)
+  @Query(() => Venue, { nullable: true })
   async venue(@Arg("id") id: string) {
     return await this.venueService.getVenueDetails(id);
   }
