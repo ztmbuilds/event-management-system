@@ -15,6 +15,7 @@ import {
   OrganizerResolver,
   SessionResolver,
   SpeakerResolver,
+  TicketTypeResolver,
   UserResolver,
   VenueResolver,
 } from "./graphql/resolvers";
@@ -35,6 +36,7 @@ async function start() {
       EventResolver,
       SessionResolver,
       SpeakerResolver,
+      TicketTypeResolver,
     ],
     authChecker: customAuthChecker,
     validate: true,

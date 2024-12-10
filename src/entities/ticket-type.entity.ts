@@ -16,8 +16,8 @@ export class TicketType extends AbstractEntity {
   description: string;
 
   @Field(() => Float)
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price: number;
+  @Column({ type: "numeric", precision: 10, scale: 2 })
+  price: string;
 
   @Field()
   @Column({ type: "int" })

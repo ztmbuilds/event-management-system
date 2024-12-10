@@ -8,7 +8,7 @@ import { Venue } from "../entities/venue.entity";
 import { Session } from "../entities/session.entity";
 import venueRepository from "../repositories/venue.repository";
 import sessionRepository from "../repositories/session.repository";
-import ticketTypeRepository from "../repositories/ticketType.repository";
+import ticketTypeRepository from "../repositories/ticket-type.repository";
 import { TicketType } from "../entities/ticket-type.entity";
 import { Attendee } from "../entities/attendee.entity";
 import { Organizer } from "../entities/organizers.entity";
@@ -221,6 +221,28 @@ export const createLoaders = () => {
 
       return organizerIds.map((id) => organizerMap.get(id) || null);
     }),
+
+    ticketTypeAttendeesLoader: new DataLoader<string, Attendee[]>(
+      async (ticketTypeIds) => {
+        const attendees = await attendeeRepository.find({
+          where: {
+            ticketId: In(ticketTypeIds),
+          },
+        });
+
+        const ticketTypeAttendeesMap = new Map<string, Attendee[]>();
+        ticketTypeIds.forEach((id) => ticketTypeAttendeesMap.set(id, []));
+
+        attendees.forEach((attendee) => {
+          const ticketTypeAttendees =
+            ticketTypeAttendeesMap.get(attendee.ticketId) || [];
+          ticketTypeAttendees.push(attendee);
+          ticketTypeAttendeesMap.set(attendee.ticketId, ticketTypeAttendees);
+        });
+
+        return ticketTypeIds.map((id) => ticketTypeAttendeesMap.get(id) || []);
+      }
+    ),
   };
 };
 
