@@ -1,16 +1,17 @@
-import { Repository } from "typeorm";
-import { AppDataSource } from "../database";
 import { User } from "../entities/user.entity";
 import { IUserLogin, IUserSignup } from "../types";
 import { ConflictError, UnauthorizedError } from "../utils/error";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
+import userRepository, {
+  UserRepository,
+} from "../repositories/user.repository";
 
 export class AuthService {
-  private userRepository: Repository<User>;
+  private userRepository: UserRepository;
   constructor() {
-    this.userRepository = AppDataSource.getRepository(User);
+    this.userRepository = userRepository;
   }
 
   async signup(data: IUserSignup) {
@@ -23,13 +24,12 @@ export class AuthService {
     if (existingUser)
       throw new ConflictError("User with that email already exists");
 
-    const newUser = this.userRepository.create({
-      name,
-      email,
-      password,
-    });
+    const newUser = new User();
+    newUser.name = name;
+    newUser.email = email;
+    newUser.password = password;
 
-    await this.userRepository.insert(newUser);
+    await this.userRepository.save(newUser);
 
     return newUser;
   }
@@ -37,8 +37,10 @@ export class AuthService {
   async login(data: IUserLogin) {
     const { email, password } = data;
 
-    const user = await this.userRepository.findOneBy({
-      email,
+    const user = await this.userRepository.findOne({
+      where: {
+        email,
+      },
     });
 
     const isCorrect = await bcrypt.compare(password, user.password);
