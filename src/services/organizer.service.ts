@@ -11,7 +11,7 @@ import { User } from "../entities/user.entity";
 import organizerRepository, {
   OrganizerRepository,
 } from "../repositories/organizer.repository";
-import { AppDataSource } from "../database";
+import { TransactionHandler } from "../utils/transaction";
 
 export class OrganizerService {
   private organizerRepository: OrganizerRepository;
@@ -33,7 +33,10 @@ export class OrganizerService {
     if (user.role === Roles.ORGANIZER)
       throw new ConflictError("Organizer profile already exists for this user");
 
-    return await AppDataSource.transaction(
+    const transactionHandler = new TransactionHandler();
+    await transactionHandler.startTransaction();
+
+    return transactionHandler.executeInTransaction(
       async (transactionalEntityManager) => {
         const newOrganizer = new Organizer();
 
