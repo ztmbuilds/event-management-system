@@ -44,6 +44,12 @@ export class ForbiddenError extends BaseError {
   }
 }
 
+export class InternalServerError extends BaseError {
+  constructor(message = "something went wrong") {
+    super(message, "INTERNAL_SERVER_ERROR", 500);
+  }
+}
+
 export function formatError(
   formattedError: GraphQLFormattedError,
   error: unknown

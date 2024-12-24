@@ -8,6 +8,7 @@ import { Session } from "../entities/session.entity";
 import { Venue } from "../entities/venue.entity";
 import { Organizer } from "../entities/organizers.entity";
 import { Speaker } from "../entities/speaker.entity";
+import { Payment } from "../entities/payment.entity";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -25,7 +26,9 @@ export const AppDataSource = new DataSource({
     Venue,
     Organizer,
     Speaker,
+    Payment,
   ],
+  logging: ["query", "error"],
 });
 
 AppDataSource.initialize()

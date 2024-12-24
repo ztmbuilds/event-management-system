@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
@@ -13,6 +13,7 @@ import {
   AuthResolver,
   EventResolver,
   OrganizerResolver,
+  PaymentResolver,
   SessionResolver,
   SpeakerResolver,
   TicketTypeResolver,
@@ -23,6 +24,8 @@ import { buildSchema } from "type-graphql";
 import { formatError } from "./utils/error";
 import context, { MyContext } from "./utils/context";
 import { customAuthChecker } from "./helpers/auth.helper";
+
+import { paystackWebhookHandler } from "./helpers/webhook.helper";
 
 async function start() {
   const app = express();
@@ -37,6 +40,7 @@ async function start() {
       SessionResolver,
       SpeakerResolver,
       TicketTypeResolver,
+      PaymentResolver,
     ],
     authChecker: customAuthChecker,
     validate: true,
@@ -50,11 +54,18 @@ async function start() {
   });
 
   await server.start();
+  app.use(express.json());
+
+  app.post(
+    "/paystack-webhook",
+    async (req: Request, res: Response, next: NextFunction) => {
+      await paystackWebhookHandler(req, res);
+    }
+  );
 
   app.use(
     "/graphql",
     cors(),
-    express.json(),
     expressMiddleware(server, {
       context,
     })

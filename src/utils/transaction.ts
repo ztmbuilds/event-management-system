@@ -24,8 +24,9 @@ export class TransactionHandler {
     work: (transactionalEntityManager: EntityManager) => Promise<void | T>
   ) {
     try {
-      await work(this.queryRunner.manager);
+      const result = await work(this.queryRunner.manager);
       await this.queryRunner.commitTransaction();
+      return result;
     } catch (error) {
       await this.queryRunner.rollbackTransaction();
       throw error;

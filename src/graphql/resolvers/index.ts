@@ -6,3 +6,4 @@ export { VenueResolver } from "./venue.resolver";
 export { SessionResolver } from "./session.resolver";
 export { SpeakerResolver } from "./speaker.resolver";
 export { TicketTypeResolver } from "./ticket-type.resolver";
+export { PaymentResolver } from "./payment.resolver";

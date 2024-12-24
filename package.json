@@ -21,14 +21,16 @@
     "graphql": "^16.9.0",
     "graphql-scalars": "^1.23.0",
     "jsonwebtoken": "^9.0.2",
+    "paystack-sdk": "^2.5.17",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "type-graphql": "2.0.0-rc.2",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.7",
