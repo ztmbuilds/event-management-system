@@ -43,13 +43,13 @@ export class Attendee extends AbstractEntity {
   eventId: string;
 
   @Field(() => TicketType)
-  @ManyToOne(() => TicketType, (ticket) => ticket.attendees, {
+  @ManyToOne(() => TicketType, (ticketType) => ticketType.attendees, {
     nullable: false,
   })
-  ticket: TicketType;
+  ticketType: TicketType;
 
   @Column()
-  ticketId: string;
+  ticketTypeId: string;
 
   @Field(() => CheckinStatus)
   @Column({
@@ -63,6 +63,8 @@ export class Attendee extends AbstractEntity {
   @ManyToMany(() => Session, (session) => session.attendees)
   @JoinTable({
     name: "attendees_sessions",
+    joinColumn: { name: "attendee_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "session_id", referencedColumnName: "id" },
   })
   sessions: Session[];
 }

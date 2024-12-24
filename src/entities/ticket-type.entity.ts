@@ -51,6 +51,6 @@ export class TicketType extends AbstractEntity {
   eventId: string;
 
   @Field(() => [Attendee])
-  @OneToMany(() => Attendee, (attendee) => attendee.ticket)
+  @OneToMany(() => Attendee, (attendee) => attendee.ticketType)
   attendees: Attendee[];
 }
