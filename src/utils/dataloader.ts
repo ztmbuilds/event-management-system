@@ -2,7 +2,7 @@ import DataLoader from "dataloader";
 import { User } from "../entities/user.entity";
 import userRepository from "../repositories/user.repository";
 import eventRepository from "../repositories/event.repository";
-import { In } from "typeorm";
+import { FindOptionsRelations, FindOptionsWhere, In } from "typeorm";
 import { Event } from "../entities/event.entity";
 import { Venue } from "../entities/venue.entity";
 import { Session } from "../entities/session.entity";
@@ -16,233 +16,131 @@ import attendeeRepository from "../repositories/attendee.repository";
 import organizerRepository from "../repositories/organizer.repository";
 import { Speaker } from "../entities/speaker.entity";
 import speakerRepository from "../repositories/speaker.repository";
+import { AbstractRepository } from "../repositories/abstract.repository";
+import { AbstractEntity } from "../entities/abstract.entity";
 
-const createEventsLoader = (field: keyof Event) => {
-  return new DataLoader<string, Event[]>(async (ids) => {
-    const events = await eventRepository.find({
+function entityLoader<E extends AbstractEntity>(
+  repository: AbstractRepository<E>,
+  field: keyof E
+) {
+  return new DataLoader<string, E>(async (ids: readonly string[]) => {
+    const entities = await repository.find({
       where: {
         [field]: In(ids),
-      },
+      } as FindOptionsWhere<E>,
     });
 
-    //group events
+    const map = new Map(
+      entities.map((entity) => [entity[field] as string, entity])
+    );
 
-    const eventMap = new Map<string, Event[]>();
-    ids.forEach((id) => eventMap.set(id, []));
-
-    events.forEach((event) => {
-      const key = event[field] as string;
-      const events = eventMap.get(key) || [];
-      events.push(event);
-      eventMap.set(key, events);
-    });
-
-    return ids.map((id) => eventMap.get(id) || []);
+    return ids.map((id) => map.get(id) || null);
   });
-};
+}
+
+function entitiesLoader<E extends AbstractEntity>(
+  repository: AbstractRepository<E>,
+  field: keyof E
+) {
+  return new DataLoader<string, E[]>(async (ids: readonly string[]) => {
+    const entities = await repository.find({
+      where: {
+        [field]: In(ids),
+      } as FindOptionsWhere<E>,
+    });
+
+    const map = new Map<string, E[]>();
+
+    ids.forEach((id) => map.set(id, []));
+    entities.forEach((entity) => {
+      const items = map.get(entity[field] as string) || [];
+      items.push(entity);
+
+      map.set(entity[field] as string, items);
+    });
+
+    return ids.map((id) => map.get(id) || []);
+  });
+}
+
+//not perfect. issue with field type.
+function entitiesWithManyToManyRelationLoader<
+  E extends AbstractEntity,
+  R extends AbstractEntity
+>(
+  repository: AbstractRepository<E>,
+  field: keyof AbstractEntity,
+  relation: keyof E
+) {
+  return new DataLoader<string, E[]>(async (ids: readonly string[]) => {
+    const entities = await repository.find({
+      relations: {
+        [relation]: true,
+      } as FindOptionsRelations<E>,
+      where: {
+        [relation]: {
+          [field]: In(ids),
+        },
+      } as FindOptionsWhere<E>,
+    });
+
+    const map = new Map<string, E[]>();
+
+    ids.forEach((id) => map.set(id, []));
+    entities.forEach((entity) => {
+      (entity[relation] as R[]).forEach((relatedEntity: R) => {
+        const items = map.get(relatedEntity[field] as string) || [];
+        items.push(entity);
+
+        map.set(entity[field] as string, items);
+      });
+    });
+
+    return ids.map((id) => map.get(id) || []);
+  });
+}
 
 export const createLoaders = () => {
   return {
-    userLoader: new DataLoader<string, User>(async (organizerIds) => {
-      const users = await userRepository.find({
-        where: {
-          organizerProfileId: In(organizerIds),
-        },
-      });
+    userLoader: entityLoader<User>(userRepository, "organizerProfileId"),
 
-      const userMap = new Map(
-        users.map((user) => [user.organizerProfileId, user])
-      );
+    sessionLoader: entitiesLoader<Session>(sessionRepository, "eventId"),
 
-      return organizerIds.map((id) => userMap.get(id) || null);
-    }),
-
-    eventsByOrganizerIdLoader: createEventsLoader("organizerId"),
-
-    eventsByVenueIdLoader: createEventsLoader("venueId"),
-
-    eventLoader: new DataLoader<string, Event>(async (eventIds) => {
-      const events = await eventRepository.find({
-        where: {
-          id: In(eventIds),
-        },
-      });
-      const eventMap = new Map<string, Event>(
-        events.map((event) => [event.id, event])
-      );
-
-      return eventIds.map((id) => eventMap.get(id) || null);
-    }),
-
-    venueLoader: new DataLoader<string, Venue>(async (venueIds) => {
-      const venues = await venueRepository.find({
-        where: {
-          id: In(venueIds),
-        },
-      });
-
-      const venueMap = new Map<string, Venue>(
-        venues.map((venue) => [venue.id, venue])
-      );
-
-      return venueIds.map((id) => venueMap.get(id));
-    }),
-
-    sessionLoader: new DataLoader<string, Session[]>(async (eventIds) => {
-      const sessions = await sessionRepository.find({
-        where: {
-          eventId: In(eventIds),
-        },
-      });
-
-      const sessionMap = new Map<string, Session[]>();
-
-      eventIds.forEach((id) => sessionMap.set(id, []));
-
-      sessions.forEach((session) => {
-        const eventSessions = sessionMap.get(session.id) || [];
-
-        eventSessions.push(session);
-
-        sessionMap.set(session.eventId, eventSessions);
-      });
-
-      return eventIds.map((id) => sessionMap.get(id) || []);
-    }),
-
-    speakerLoader: new DataLoader<string, Speaker[]>(async (sessionIds) => {
-      const speakers = await speakerRepository.find({
-        relations: {
-          sessions: true,
-        },
-        where: {
-          sessions: {
-            id: In(sessionIds),
-          },
-        },
-      });
-
-      const speakerMap = new Map<string, Speaker[]>();
-
-      sessionIds.forEach((id) => speakerMap.set(id, []));
-
-      speakers.forEach((speaker) => {
-        speaker.sessions.forEach((session) => {
-          const sessionSpeakers = speakerMap.get(session.id) || [];
-          sessionSpeakers.push(speaker);
-          speakerMap.set(session.id, sessionSpeakers);
-        });
-      });
-
-      return sessionIds.map((id) => speakerMap.get(id) || []);
-    }),
-
-    sessionAttendeesLoader: new DataLoader<string, Attendee[]>(
-      async (sessionIds) => {
-        const attendees = await attendeeRepository.find({
-          relations: {
-            sessions: true,
-          },
-          where: {
-            sessions: {
-              id: In(sessionIds),
-            },
-          },
-        });
-
-        const sessionAttendeesMap = new Map<string, Attendee[]>();
-        sessionIds.forEach((id) => sessionAttendeesMap.set(id, []));
-
-        attendees.forEach((attendee) => {
-          attendee.sessions.forEach((session) => {
-            const sessionAttendees = sessionAttendeesMap.get(session.id);
-            sessionAttendees.push(attendee);
-            sessionAttendeesMap.set(session.id, sessionAttendees);
-          });
-        });
-
-        return sessionIds.map((id) => sessionAttendeesMap.get(id) || []);
-      }
+    eventsByOrganizerIdLoader: entitiesLoader<Event>(
+      eventRepository,
+      "organizerId"
     ),
 
-    ticketLoader: new DataLoader<string, TicketType[]>(async (eventIds) => {
-      const ticketTypes = await ticketTypeRepository.find({
-        where: {
-          eventId: In(eventIds),
-        },
-      });
+    eventsByVenueIdLoader: entitiesLoader<Event>(eventRepository, "venueId"),
 
-      const ticketTypeMap = new Map<string, TicketType[]>();
+    eventLoader: entityLoader<Event>(eventRepository, "id"),
 
-      eventIds.forEach((id) => ticketTypeMap.set(id, []));
+    venueLoader: entityLoader<Venue>(venueRepository, "id"),
 
-      ticketTypes.forEach((ticketType) => {
-        const eventTicketTypes = ticketTypeMap.get(ticketType.eventId) || [];
+    ticketLoader: entitiesLoader<TicketType>(ticketTypeRepository, "eventId"),
 
-        eventTicketTypes.push(ticketType);
+    ticketTypeLoader: entityLoader<TicketType>(ticketTypeRepository, "id"),
 
-        ticketTypeMap.set(ticketType.eventId, eventTicketTypes);
-      });
+    attendeeLoader: entitiesLoader<Attendee>(attendeeRepository, "eventId"),
 
-      return eventIds.map((eventId) => ticketTypeMap.get(eventId) || []);
-    }),
+    attendeeUserLoader: entityLoader<User>(userRepository, "id"),
 
-    attendeeLoader: new DataLoader<string, Attendee[]>(async (eventIds) => {
-      const attendees = await attendeeRepository.find({
-        where: {
-          eventId: In(eventIds),
-        },
-      });
+    organizerLoader: entityLoader<Organizer>(organizerRepository, "id"),
 
-      const attendeeMap = new Map<string, Attendee[]>();
-
-      eventIds.forEach((id) => attendeeMap.set(id, []));
-
-      attendees.forEach((attendee) => {
-        const eventAttendees = attendeeMap.get(attendee.eventId) || [];
-        eventAttendees.push(attendee);
-
-        attendeeMap.set(attendee.eventId, eventAttendees);
-      });
-
-      return eventIds.map((id) => attendeeMap.get(id) || []);
-    }),
-
-    organizerLoader: new DataLoader<string, Organizer>(async (organizerIds) => {
-      const organizers = await organizerRepository.find({
-        where: {
-          id: In(organizerIds),
-        },
-      });
-
-      const organizerMap = new Map<string, Organizer>(
-        organizers.map((organizer) => [organizer.id, organizer])
-      );
-
-      return organizerIds.map((id) => organizerMap.get(id) || null);
-    }),
-
-    ticketTypeAttendeesLoader: new DataLoader<string, Attendee[]>(
-      async (ticketTypeIds) => {
-        const attendees = await attendeeRepository.find({
-          where: {
-            ticketId: In(ticketTypeIds),
-          },
-        });
-
-        const ticketTypeAttendeesMap = new Map<string, Attendee[]>();
-        ticketTypeIds.forEach((id) => ticketTypeAttendeesMap.set(id, []));
-
-        attendees.forEach((attendee) => {
-          const ticketTypeAttendees =
-            ticketTypeAttendeesMap.get(attendee.ticketId) || [];
-          ticketTypeAttendees.push(attendee);
-          ticketTypeAttendeesMap.set(attendee.ticketId, ticketTypeAttendees);
-        });
-
-        return ticketTypeIds.map((id) => ticketTypeAttendeesMap.get(id) || []);
-      }
+    speakerLoader: entitiesWithManyToManyRelationLoader<Speaker, Session>(
+      speakerRepository,
+      "id",
+      "sessions"
     ),
+
+    sessionAttendeesLoader: entitiesWithManyToManyRelationLoader<
+      Attendee,
+      Session
+    >(attendeeRepository, "id", "sessions"),
+    attendeeSessionsLoader: entitiesWithManyToManyRelationLoader<
+      Session,
+      Attendee
+    >(sessionRepository, "id", "attendees"),
   };
 };
 
