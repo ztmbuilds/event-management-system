@@ -30,10 +30,9 @@ export class UserService {
       relations,
     });
 
-    if (!user) throw new NotFoundError("User not found");
-
-    return user;
+    return user ? user : null;
   }
+
 
   async getUserWithOrganizerProfile(id: string) {
     return await this.getUser({ id }, undefined, {

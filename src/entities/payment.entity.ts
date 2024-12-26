@@ -74,4 +74,8 @@ export class Payment extends AbstractEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   code: string;
+
+  @Field()
+  @Column({ default: false })
+  redeemed: boolean;
 }

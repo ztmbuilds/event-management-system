@@ -69,7 +69,7 @@ export class PaystackService
             },
           });
 
-          payment.code = crypto.randomBytes(4).toString("hex");
+          payment.code = String(crypto.randomBytes(4).toString("hex"));
           payment.status = PaymentStatus.COMPLETED;
 
           await transactionalEntityManager.save(payment);
@@ -132,7 +132,7 @@ export class PaystackService
         if (response.data.amount < Number(ticketType.price))
           throw new ConflictError("Amount paid is less than ticketType price");
 
-        payment.code = crypto.randomBytes(4).toString("hex");
+        payment.code = String(crypto.randomBytes(4).toString("hex"));
 
         await transactionalEntityManager.save(ticketType);
         await transactionalEntityManager.save(payment);

@@ -10,6 +10,7 @@ config();
 import "./database";
 import { PORT } from "./config";
 import {
+  AttendeeResolver,
   AuthResolver,
   EventResolver,
   OrganizerResolver,
@@ -41,6 +42,7 @@ async function start() {
       SpeakerResolver,
       TicketTypeResolver,
       PaymentResolver,
+      AttendeeResolver,
     ],
     authChecker: customAuthChecker,
     validate: true,

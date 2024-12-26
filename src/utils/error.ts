@@ -50,6 +50,12 @@ export class InternalServerError extends BaseError {
   }
 }
 
+export class UnprocessibleEntityError extends BaseError {
+  constructor(message: string) {
+    super(message, "UNPROCESSIBLE_ENTITY", 422);
+  }
+}
+
 export function formatError(
   formattedError: GraphQLFormattedError,
   error: unknown

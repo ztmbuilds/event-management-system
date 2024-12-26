@@ -7,3 +7,4 @@ export { SessionResolver } from "./session.resolver";
 export { SpeakerResolver } from "./speaker.resolver";
 export { TicketTypeResolver } from "./ticket-type.resolver";
 export { PaymentResolver } from "./payment.resolver";
+export { AttendeeResolver } from "./attendee.resolver";

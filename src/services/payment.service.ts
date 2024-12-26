@@ -4,17 +4,23 @@ import { PaystackTransactionInitializedData } from "../graphql/typeDefs/payment.
 import { BadRequestError, NotFoundError } from "../utils/error";
 import { TransactionHandler } from "../utils/transaction";
 import { PaystackService } from "./paystack.service";
+import paymentRepositorty, {
+  PaymentRepository,
+} from "../repositories/payment.repository";
 
 interface PaymentServices {
   [PROVIDERS.PAYSTACK]: AbstractPaymentService<PaystackTransactionInitializedData>;
 }
 export class PaymentService {
   private readonly paymentServices: PaymentServices;
+  private readonly paymentRepository: PaymentRepository;
 
   constructor() {
     this.paymentServices = {
       [PROVIDERS.PAYSTACK]: new PaystackService(),
     };
+
+    this.paymentRepository = paymentRepositorty;
   }
 
   async initializePaymentForTicketType(
@@ -65,5 +71,14 @@ export class PaymentService {
       throw new BadRequestError("Unsupported payment method");
 
     return await providerService.verifyPayment(reference);
+  }
+
+  async getPaymentByCode(code: string) {
+    const payment = await this.paymentRepository.findOne({
+      where: {
+        code,
+      },
+    });
+    return payment ? payment : null;
   }
 }
