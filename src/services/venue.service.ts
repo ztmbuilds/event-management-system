@@ -9,10 +9,7 @@ import venueRepository, {
 import { NotFoundError } from "../utils/error";
 
 export class VenueService {
-  private readonly venueRepository: VenueRepository;
-  constructor() {
-    this.venueRepository = venueRepository;
-  }
+  constructor(private readonly venueRepository: VenueRepository) {}
 
   async createVenue(data: CreateVenueInput) {
     const newVenue = new Venue();
@@ -55,4 +52,4 @@ export class VenueService {
   }
 }
 
-export default new VenueService();
+export default new VenueService(venueRepository);

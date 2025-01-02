@@ -18,10 +18,7 @@ import {
 import eventService from "./event.service";
 
 export class TicketTypeService {
-  private readonly ticketTypeRepository: TicketTypeRepository;
-  constructor() {
-    this.ticketTypeRepository = ticketTypeRepository;
-  }
+  constructor(private readonly ticketTypeRepository: TicketTypeRepository) {}
 
   async createTicketType(
     eventId: string,
@@ -135,4 +132,4 @@ export class TicketTypeService {
     return ticketType ? ticketType : null;
   }
 }
-export default new TicketTypeService();
+export default new TicketTypeService(ticketTypeRepository);

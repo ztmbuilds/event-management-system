@@ -25,11 +25,9 @@ export class PaystackService
   implements AbstractPaymentService<PaystackTransactionInitializedData>
 {
   private readonly paystack: Paystack;
-  private readonly paymentRepository: PaymentRepository;
 
-  constructor() {
+  constructor(private readonly paymentRepository: PaymentRepository) {
     this.paystack = new Paystack(PAYSTACK_SECRET_KEY);
-    this.paymentRepository = paymentRepository;
   }
   async initializePayment(ticketType: TicketType, email: string) {
     const response = await this.paystack.transaction.initialize({

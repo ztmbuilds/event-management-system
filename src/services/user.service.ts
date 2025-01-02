@@ -5,7 +5,7 @@ import {
 } from "typeorm";
 import { Roles, User } from "../entities/user.entity";
 
-import { NotFoundError } from "../utils/error";
+import { ConflictError, NotFoundError } from "../utils/error";
 
 import userRepository, {
   UserRepository,
@@ -14,10 +14,7 @@ import { TransactionHandler } from "../utils/transaction";
 import { Organizer } from "../entities/organizers.entity";
 
 export class UserService {
-  private readonly userRepository: UserRepository;
-  constructor() {
-    this.userRepository = userRepository;
-  }
+  constructor(private readonly userRepository: UserRepository) {}
 
   async getUser(
     where: FindOptionsWhere<User>,
@@ -33,7 +30,6 @@ export class UserService {
     return user ? user : null;
   }
 
-
   async getUserWithOrganizerProfile(id: string) {
     return await this.getUser({ id }, undefined, {
       organizerProfile: true,
@@ -44,7 +40,7 @@ export class UserService {
     const transactionHandler = new TransactionHandler();
     await transactionHandler.startTransaction("READ COMMITTED");
 
-    transactionHandler.executeInTransaction(
+    return transactionHandler.executeInTransaction(
       async (transactionalEntityManager) => {
         const user = await transactionalEntityManager.findOne(User, {
           where: { id },
@@ -52,6 +48,8 @@ export class UserService {
         });
 
         if (!user) throw new NotFoundError("No user found");
+        if (!user.organizerProfile)
+          throw new ConflictError("User does not have an organizer Profile");
         await transactionalEntityManager.softRemove(user.organizerProfile);
 
         user.role = Roles.ATTENDEE;
@@ -73,6 +71,10 @@ export class UserService {
         });
 
         if (!user) throw new NotFoundError("No user found");
+        if (!user.organizerProfile)
+          throw new NotFoundError(
+            "No organizerProfile associated with this user"
+          );
 
         await transactionalEntityManager.restore(
           Organizer,
@@ -86,4 +88,5 @@ export class UserService {
     );
   }
 }
-export default new UserService();
+
+export default new UserService(userRepository);

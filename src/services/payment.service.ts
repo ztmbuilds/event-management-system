@@ -17,7 +17,7 @@ export class PaymentService {
 
   constructor() {
     this.paymentServices = {
-      [PROVIDERS.PAYSTACK]: new PaystackService(),
+      [PROVIDERS.PAYSTACK]: new PaystackService(paymentRepositorty),
     };
 
     this.paymentRepository = paymentRepositorty;

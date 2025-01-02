@@ -9,10 +9,7 @@ import { Speaker } from "../entities/speaker.entity";
 import { NotFoundError } from "../utils/error";
 
 export class SpeakerService {
-  private speakerRepository: SpeakerRepository;
-  constructor() {
-    this.speakerRepository = speakerRepository;
-  }
+  constructor(private readonly speakerRepository: SpeakerRepository) {}
 
   async createSpeaker(data: CreateSpeakerInput) {
     const newSpeaker = new Speaker();
@@ -58,4 +55,4 @@ export class SpeakerService {
   }
 }
 
-export default new SpeakerService();
+export default new SpeakerService(speakerRepository);

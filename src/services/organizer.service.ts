@@ -14,10 +14,7 @@ import organizerRepository, {
 import { TransactionHandler } from "../utils/transaction";
 
 export class OrganizerService {
-  private organizerRepository: OrganizerRepository;
-  constructor() {
-    this.organizerRepository = organizerRepository;
-  }
+  constructor(private readonly organizerRepository: OrganizerRepository) {}
 
   async createOrganizerProfile(data: CreateOrganizerInput, userId: string) {
     const { name, description } = data;
@@ -163,4 +160,4 @@ export class OrganizerService {
   }
 }
 
-export default new OrganizerService();
+export default new OrganizerService(organizerRepository);

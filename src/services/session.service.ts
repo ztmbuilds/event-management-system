@@ -19,11 +19,7 @@ import { MyContext } from "../utils/context";
 import speakerService from "./speaker.service";
 
 export class SessionService {
-  private readonly sessionRepository: SessionRepository;
-
-  constructor() {
-    this.sessionRepository = sessionRepository;
-  }
+  constructor(private readonly sessionRepository: SessionRepository) {}
 
   async createSession(data: CreateSessionInput, ctx: MyContext) {
     const {
@@ -158,4 +154,4 @@ export class SessionService {
   }
 }
 
-export default new SessionService();
+export default new SessionService(sessionRepository);

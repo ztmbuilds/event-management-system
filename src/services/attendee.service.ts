@@ -17,10 +17,7 @@ import { PaymentService } from "./payment.service";
 import { FindOptionsRelations } from "typeorm";
 
 export class AttendeeService {
-  private readonly attendeeRepository: AttendeeRepository;
-  constructor() {
-    this.attendeeRepository = attendeeRepository;
-  }
+  constructor(private readonly attendeeRepository: AttendeeRepository) {}
 
   async registerAttendeeProfileForEvent(
     code: string,
@@ -115,4 +112,4 @@ export class AttendeeService {
   }
 }
 
-export default new AttendeeService();
+export default new AttendeeService(attendeeRepository);

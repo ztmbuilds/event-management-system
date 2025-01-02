@@ -9,10 +9,7 @@ import userRepository, {
 } from "../repositories/user.repository";
 
 export class AuthService {
-  private userRepository: UserRepository;
-  constructor() {
-    this.userRepository = userRepository;
-  }
+  constructor(private readonly userRepository: UserRepository) {}
 
   async signup(data: IUserSignup) {
     const { name, email, password } = data;
@@ -43,6 +40,8 @@ export class AuthService {
       },
     });
 
+    if (!user) throw new UnauthorizedError("Invalid login credentials");
+
     const isCorrect = await bcrypt.compare(password, user.password);
     if (!user || !isCorrect)
       throw new UnauthorizedError("Invalid login credentials");
@@ -55,4 +54,4 @@ export class AuthService {
   }
 }
 
-export default new AuthService();
+export default new AuthService(userRepository);

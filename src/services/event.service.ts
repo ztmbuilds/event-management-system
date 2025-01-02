@@ -17,10 +17,7 @@ import { MyContext } from "../utils/context";
 import { Roles } from "../entities/user.entity";
 
 export class EventService {
-  eventRepository: EventRepository;
-  constructor() {
-    this.eventRepository = eventRepository;
-  }
+  constructor(private readonly eventRepository: EventRepository) {}
 
   async createEvent(data: CreateEventInput, userId: string, venueId: string) {
     const user = await userService.getUser(
@@ -139,4 +136,4 @@ export class EventService {
   }
 }
 
-export default new EventService();
+export default new EventService(eventRepository);
