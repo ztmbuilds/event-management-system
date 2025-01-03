@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "node:crypto";
 import { PAYSTACK_SECRET_KEY } from "../config";
-import { PaystackService } from "../services/paystack.service";
-
-const paystackService = new PaystackService();
+import paystackService from "../services/paystack.service";
 
 export async function paystackWebhookHandler(req: Request, res: Response) {
   try {

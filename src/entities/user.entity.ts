@@ -45,10 +45,10 @@ export class User extends AbstractEntity {
     onDelete: "SET NULL",
   })
   @JoinColumn()
-  organizerProfile: Organizer;
+  organizerProfile?: Organizer;
 
   @Column({ type: "uuid", nullable: true })
-  organizerProfileId: string;
+  organizerProfileId?: string;
 
   @Field(() => [Attendee])
   @OneToMany(() => Attendee, (attendee) => attendee.user)

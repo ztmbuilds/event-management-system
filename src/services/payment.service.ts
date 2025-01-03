@@ -4,7 +4,7 @@ import { PaystackTransactionInitializedData } from "../graphql/typeDefs/payment.
 import { BadRequestError, NotFoundError } from "../utils/error";
 import { TransactionHandler } from "../utils/transaction";
 import { PaystackService } from "./paystack.service";
-import paymentRepositorty, {
+import paymentRepository, {
   PaymentRepository,
 } from "../repositories/payment.repository";
 
@@ -13,14 +13,11 @@ interface PaymentServices {
 }
 export class PaymentService {
   private readonly paymentServices: PaymentServices;
-  private readonly paymentRepository: PaymentRepository;
 
-  constructor() {
+  constructor(private readonly paymentRepository: PaymentRepository) {
     this.paymentServices = {
-      [PROVIDERS.PAYSTACK]: new PaystackService(paymentRepositorty),
+      [PROVIDERS.PAYSTACK]: new PaystackService(paymentRepository),
     };
-
-    this.paymentRepository = paymentRepositorty;
   }
 
   async initializePaymentForTicketType(
@@ -82,3 +79,5 @@ export class PaymentService {
     return payment ? payment : null;
   }
 }
+
+export default new PaymentService(paymentRepository);

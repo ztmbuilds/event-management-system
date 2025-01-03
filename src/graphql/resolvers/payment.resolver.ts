@@ -3,7 +3,7 @@ import {
   InitializePaymentInput,
   InitializePaymentPayStackResponse,
 } from "../typeDefs/payment.types";
-import { PaymentService } from "../../services/payment.service";
+import paymentService, { PaymentService } from "../../services/payment.service";
 import { PROVIDERS } from "../../types";
 import { Payment } from "../../entities/payment.entity";
 
@@ -11,7 +11,7 @@ import { Payment } from "../../entities/payment.entity";
 export class PaymentResolver {
   private readonly paymentService: PaymentService;
   constructor() {
-    this.paymentService = new PaymentService();
+    this.paymentService = paymentService;
   }
   @Query(() => String)
   hello() {

@@ -24,7 +24,7 @@ import { TransactionHandler } from "../utils/transaction";
 export class PaystackService
   implements AbstractPaymentService<PaystackTransactionInitializedData>
 {
-  private readonly paystack: Paystack;
+  readonly paystack: Paystack;
 
   constructor(private readonly paymentRepository: PaymentRepository) {
     this.paystack = new Paystack(PAYSTACK_SECRET_KEY);
@@ -140,3 +140,5 @@ export class PaystackService
     );
   }
 }
+
+export default new PaystackService(paymentRepository);

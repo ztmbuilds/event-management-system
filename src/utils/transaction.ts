@@ -2,7 +2,7 @@ import { EntityManager, QueryRunner } from "typeorm";
 import { AppDataSource } from "../database";
 
 export class TransactionHandler {
-  private readonly queryRunner: QueryRunner;
+  readonly queryRunner: QueryRunner;
   constructor() {
     this.queryRunner = AppDataSource.createQueryRunner();
   }

@@ -13,7 +13,7 @@ import {
 import { TransactionHandler } from "../utils/transaction";
 import eventService from "./event.service";
 import ticketTypeService from "./ticket-type.service";
-import { PaymentService } from "./payment.service";
+import paymentService, { PaymentService } from "./payment.service";
 import { FindOptionsRelations } from "typeorm";
 
 export class AttendeeService {
@@ -43,7 +43,7 @@ export class AttendeeService {
     const event = await eventService.getEvent(eventId);
     if (!event) throw new NotFoundError("event not found");
 
-    const payment = await new PaymentService().getPaymentByCode(code);
+    const payment = await paymentService.getPaymentByCode(code);
     if (!payment) throw new NotFoundError("No payment found with that code");
 
     const ticketType = await ticketTypeService.getTicketType(
